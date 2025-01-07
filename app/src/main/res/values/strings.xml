@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">JLBerlin</string>
+
+    <string name="nav_home">Home</string>
+    <string name="nav_map">Map</string>
+    <string name="nav_scoreboard">Scoreboard</string>
+</resources>
