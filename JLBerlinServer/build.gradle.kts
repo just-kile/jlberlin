@@ -41,4 +41,9 @@ dependencies {
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
+    testImplementation(libs.testng)
+    testImplementation(libs.org.hamcrest)
+    testImplementation(libs.ktor.client.core)
+    testImplementation(libs.ktor.client.content.negotiation)
+
 }

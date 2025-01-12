@@ -90,18 +90,18 @@ import de.justkile.jlberlin.repository.ClaimRepository
 import de.justkile.jlberlin.repository.DistrictRepository
 import de.justkile.jlberlin.repository.LocationDataRepository
 import de.justkile.jlberlin.repository.TeamRepository
+import de.justkile.jlberlin.ui.ScoreList
+import de.justkile.jlberlin.ui.theme.TeamColors
 import de.justkile.jlberlinmodel.Team
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 
+
 class MainActivity : ComponentActivity() {
 
     private lateinit var viewModel: GameViewModel
-
-    private val teamColors =
-        listOf(Color.Red, Color.Blue, Color.Green, Color.Magenta, Color.Cyan, Color.Yellow)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -176,7 +176,8 @@ class MainActivity : ComponentActivity() {
             startDestination = AppDestinations.HOME.name
         ) {
             composable(AppDestinations.HOME.name) {
-                DistrictList(districts)
+                val team2score by viewModel.team2Score.collectAsState()
+                ScoreList(team2score)
             }
             composable(AppDestinations.MAP.name) {
                 DistrictMap(districts)
@@ -204,7 +205,7 @@ class MainActivity : ComponentActivity() {
             teams.forEachIndexed { index, team ->
                 Button(
                     onClick = { onTeamSelected(team) },
-                    colors = ButtonDefaults.buttonColors(containerColor = teamColors[index]),
+                    colors = ButtonDefaults.buttonColors(containerColor = TeamColors[index]),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(text = team.name)
@@ -317,7 +318,8 @@ class MainActivity : ComponentActivity() {
         Log.i("DistrictMap", "COMPOSE")
 
         val teams = viewModel.teams.collectAsState().value
-        val team2teamColor = teams.map { it to teamColors[teams.indexOf(it)] }.toMap()
+        val colors = TeamColors
+        val team2teamColor = teams.map { it to colors[teams.indexOf(it)] }.toMap()
 
 
         val berlin = LatLng(52.520008, 13.404954)
@@ -458,46 +460,8 @@ class MainActivity : ComponentActivity() {
         })
     }
 
-    @Composable
-    fun DistrictList(districts: Districts) {
-        val groupedDistricts = districts.districts.groupBy { it.parentName }.toSortedMap()
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            groupedDistricts.forEach { (parentName, districtList) ->
-                item {
-                    Text(
-                        text = parentName,
-                        style = MaterialTheme.typography.headlineMedium,
-                        modifier = Modifier
-                            .padding(vertical = 8.dp)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                            .padding(8.dp)
-                    )
-                }
-                items(districtList.sortedBy { it.name }) { district ->
-                    Card(
-                        shape = RoundedCornerShape(8.dp),
-                        elevation = CardDefaults.cardElevation(4.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = district.name,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier
-                                .padding(16.dp)
-                        )
-                    }
-                }
-            }
-        }
 
-    }
 
 }
 

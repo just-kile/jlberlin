@@ -2,6 +2,7 @@ package de.justkile.jlberlin.viewmodel
 
 import android.util.Log
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.justkile.jlberlin.BackendClient
@@ -10,10 +11,13 @@ import de.justkile.jlberlin.repository.ClaimRepository
 import de.justkile.jlberlin.repository.DistrictRepository
 import de.justkile.jlberlin.repository.LocationDataRepository
 import de.justkile.jlberlin.repository.TeamRepository
+import de.justkile.jlberlin.ui.theme.TeamColors
 import de.justkile.jlberlinmodel.DistrictClaim
 import de.justkile.jlberlinmodel.Team
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 data class ClaimState(
@@ -21,6 +25,11 @@ data class ClaimState(
 ) {
     fun isClaimed() = team != null
 }
+
+class ColoredTeam (
+    val name: String,
+    val color: Color
+)
 
 class GameViewModel(
     private val districtRepository: DistrictRepository,
@@ -92,7 +101,31 @@ class GameViewModel(
         }
     }
 
+    private var _team2Score : MutableStateFlow<Map<ColoredTeam, Int>> = MutableStateFlow(emptyMap())
+    val team2Score = _team2Score.asStateFlow()
 
+    init {
+        viewModelScope.launch {
+            val claims = claimRepository.getDistrictClaims()
+            calculateScoreBoard(claims)
+        }
+
+        viewModelScope.launch {
+            claimRepository.listenForNewClaims()
+        }
+
+        viewModelScope.launch {
+            claimRepository.currentClaims.collect(::calculateScoreBoard)
+        }
+    }
+
+    fun calculateScoreBoard(claims: List<DistrictClaim>) {
+        val team2teamColor = teams.value.map { it to TeamColors[teams.value.indexOf(it)] }.toMap()
+
+        _team2Score.value= teams.value.map { team ->
+            ColoredTeam(team.name, team2teamColor[team]!!) to claims.count{ it.teamName == team.name}
+        }.sortedBy { (_, value) -> -value }.toMap()
+    }
 
 
 }

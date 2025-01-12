@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.drop
 fun Application.configureRouting() {
 
     val teams = emptyList<Team>().toMutableList()
-    val districtName2teamName = mutableMapOf<String, String>()
+    val districtName2claim = mutableMapOf<String, DistrictClaim>()
 
     val newClaim = MutableStateFlow<DistrictClaim?>(null)
 
@@ -47,17 +47,22 @@ fun Application.configureRouting() {
             newClaim.value = claim
 
             if (claim.teamName == null) {
-                districtName2teamName.remove(claim.districtName)
+                districtName2claim.remove(claim.districtName)
+                call.response.status(HttpStatusCode.OK)
             } else {
-                districtName2teamName[claim.districtName] = claim.teamName!!
+                val currentClaim = districtName2claim[claim.districtName]
+                if (currentClaim != null && currentClaim.claimTimeInSeconds >= claim.claimTimeInSeconds) {
+                    call.response.status(HttpStatusCode.BadRequest)
+                } else {
+                    districtName2claim[claim.districtName] = claim
+                    call.response.status(HttpStatusCode.OK)
+                }
             }
-
-            call.response.status(HttpStatusCode.OK)
         }
 
-        // curl -i -X POST -H 'Content-Type: application/json' -d '{"districtName": "Hellersdorf", "teamName": "foo"}' http://192.168.0.87:8080/claims
+        // curl -i -X POST -H 'Content-Type: application/json' -d '{"districtName": "Hellersdorf", "teamName": "foo", "claimTimeInSeconds":"60"}' http://192.168.0.87:8080/claims
         get("/claims") {
-            call.respond(districtName2teamName.map { (districtName, teamName) -> DistrictClaim(districtName, teamName) })
+            call.respond(districtName2claim.values)
         }
 
         sse("/events") {
