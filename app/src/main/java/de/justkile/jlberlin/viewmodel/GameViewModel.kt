@@ -21,7 +21,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 data class ClaimState(
-    val team: Team?
+    val team: Team?,
+    val claimTimeInSeconds: Int = 0
 ) {
     fun isClaimed() = team != null
 }
@@ -76,7 +77,7 @@ class GameViewModel(
         claims.forEach { claim ->
             val district = districts.districts.find { it.name == claim.districtName }!!
             val team = _teams.value.find { it.name == claim.teamName }
-            _district2claimState[district]!!.value = ClaimState(team)
+            _district2claimState[district]!!.value = ClaimState(team, claim.claimTimeInSeconds)
         }
     }
 

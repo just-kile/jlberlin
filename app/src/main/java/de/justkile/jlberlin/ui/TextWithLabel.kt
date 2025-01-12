@@ -9,12 +9,15 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-fun TextWithLabel(label: String, value: String) {
+fun TextWithLabel(label: String, value: String, info: String? = null) {
     Text(buildAnnotatedString {
         append(label)
         append(": ")
         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
             append(value)
+        }
+        if (info != null) {
+            append(" ($info)")
         }
     })
 }
@@ -22,5 +25,5 @@ fun TextWithLabel(label: String, value: String) {
 @Preview(showBackground = true)
 @Composable
 fun PreviewTextWithLabel() {
-    TextWithLabel(label = "Label", value = "Value")
+    TextWithLabel(label = "Label", value = "Value", info = "Info")
 }

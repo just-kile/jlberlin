@@ -1,6 +1,5 @@
 package de.justkile.jlberlin.ui.mapcontrol
 
-
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -10,46 +9,56 @@ import de.justkile.jlberlin.model.District
 import de.justkile.jlberlin.ui.TextWithLabel
 import de.justkile.jlberlin.viewmodel.ClaimState
 import de.justkile.jlberlinmodel.Team
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 @Composable
-fun CurrentDistrict(
-    district: District?,
+fun ClaimingDistrict(
+    time: Int,
+    district: District,
     claimedBy: ClaimState?,
-    onClaim: () -> Unit,
+    onClaimAborted: () -> Unit,
+    onClaimCompleted: () -> Unit
 ) {
     MapControl(
-
         contentArea = {
-            Column() {
+            Column  {
                 TextWithLabel(
-                    label = "Located in district",
-                    value = district?.name ?: "Unknown"
+                    label = "Claming ${district.name}",
+                    value = "%01d:%02d".format(time / 60, time % 60),
+                    info = "Don't move!"
                 )
-
                 TextWithLabel(
                     label = "Claimed by",
                     value = claimedBy?.team?.name ?: "No One",
                     info = claimedBy?.let {"${it.claimTimeInSeconds / 60} min" }
                 )
+
             }
         },
-
         buttonArea = {
-            Button(
-                onClick = onClaim
-            ) {
-                Text(text = "Claim")
+            if (time / 60 <=  (claimedBy?.claimTimeInSeconds ?: 0) / 60) {
+                Button (
+                    onClick = onClaimAborted,
+                ) {
+                    Text(text = "Abort")
+                }
+            } else {
+                Button (
+                    onClick = onClaimCompleted,
+                ) {
+                    Text(text = "Complete")
+                }
             }
         }
     )
-
-
 }
 
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewCurrentDistrict() {
+fun PreviewClaimingDistrict() {
     val sampleDistrict = District(
         name = "Sample District",
         parentName = "Parent District",
@@ -61,10 +70,11 @@ fun PreviewCurrentDistrict() {
         claimTimeInSeconds = 120
     )
 
-    CurrentDistrict(
+    ClaimingDistrict(
+        time = 125,
         district = sampleDistrict,
         claimedBy = claimState,
-        onClaim = {}
+        onClaimAborted = {},
+        onClaimCompleted = {}
     )
 }
-

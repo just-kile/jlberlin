@@ -43,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -67,11 +68,13 @@ import de.justkile.jlberlin.repository.LocationDataRepository
 import de.justkile.jlberlin.repository.TeamRepository
 import de.justkile.jlberlin.ui.ScoreList
 import de.justkile.jlberlin.ui.TextWithLabel
+import de.justkile.jlberlin.ui.mapcontrol.ClaimingDistrict
 import de.justkile.jlberlin.ui.mapcontrol.CurrentDistrict
 import de.justkile.jlberlin.ui.mapcontrol.SelectedDistrict
 import de.justkile.jlberlin.ui.theme.JLBerlinTheme
 import de.justkile.jlberlin.ui.theme.TeamColors
 import de.justkile.jlberlin.viewmodel.GameViewModel
+import de.justkile.jlberlin.viewmodel.TimerViewModel
 import de.justkile.jlberlinmodel.Team
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -324,6 +327,10 @@ class MainActivity : ComponentActivity() {
 
         var levelOfDetail by remember { mutableStateOf(250) }
 
+        var isClaming by remember { mutableStateOf(false) }
+
+        val timerViewModel = viewModel<TimerViewModel>()
+
         val scope = rememberCoroutineScope()
         LaunchedEffect(true) {
 
@@ -332,6 +339,7 @@ class MainActivity : ComponentActivity() {
                     delay(500)
                     levelOfDetail /= 4
                 }
+                levelOfDetail = 1
             }
 
         }
@@ -343,18 +351,39 @@ class MainActivity : ComponentActivity() {
         ) {
 
 
-            if (selectedDistrict == null) {
+            if (isClaming) {
+                val time by timerViewModel.time.collectAsState()
+                ClaimingDistrict (
+                    time = time,
+                    district = currentDistrict!!,
+                    claimedBy = currentDistrict?.let { viewModel.district2claimState(it).collectAsState().value },
+                    onClaimCompleted = {
+                        isClaming = false
+                        viewModel.claimDistrict(
+                            district = currentDistrict!!,
+                            team = viewModel.team.value!!,
+                            claimTimeInSeconds = time - time % 60)
+                        timerViewModel.stopTimer()
+                    },
+                    onClaimAborted = {
+                        isClaming = false
+                        timerViewModel.stopTimer()
+                    }
+                )
+            }
+            else if (selectedDistrict == null) {
                 CurrentDistrict(
                     district = currentDistrict,
-                    claimedBy = currentDistrict?.let { viewModel.district2claimState(it).collectAsState().value.team },
+                    claimedBy = currentDistrict?.let { viewModel.district2claimState(it).collectAsState().value },
                     onClaim = {
-                        currentDistrict?.let { viewModel.claimDistrict(it, viewModel.team.value!!, 60) }
+                        isClaming = true
+                        timerViewModel.startTimer()
                     }
                 )
             } else {
                 SelectedDistrict(
                     district = selectedDistrict!!,
-                    claimedBy = viewModel.district2claimState(selectedDistrict!!).collectAsState().value.team,
+                    claimedBy = viewModel.district2claimState(selectedDistrict!!).collectAsState().value,
                     onClose = { selectedDistrict = null }
                 )
             }

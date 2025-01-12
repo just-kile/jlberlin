@@ -12,13 +12,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.justkile.jlberlin.model.District
 import de.justkile.jlberlin.ui.TextWithLabel
+import de.justkile.jlberlin.viewmodel.ClaimState
 import de.justkile.jlberlinmodel.Team
 
 
 @Composable
 fun SelectedDistrict(
     district: District,
-    claimedBy: Team?,
+    claimedBy: ClaimState?,
     onClose: () -> Unit
 ) {
     MapControl(
@@ -30,7 +31,8 @@ fun SelectedDistrict(
                 )
                 TextWithLabel(
                     label = "Claimed by",
-                    value = claimedBy?.name ?: "No One"
+                    value = claimedBy?.team?.name ?: "No One",
+                    info = claimedBy?.let {"${it.claimTimeInSeconds / 60} min" }
                 )
             }
         },
@@ -53,10 +55,14 @@ fun PreviewSelectedDistrict() {
         coordinates = emptyList()
     )
     val sampleTeam = Team(name = "Sample Team")
+    val claimState = ClaimState(
+        team = sampleTeam,
+        claimTimeInSeconds = 120
+    )
 
     SelectedDistrict(
         district = sampleDistrict,
-        claimedBy = sampleTeam,
+        claimedBy = claimState,
         onClose = {}
     )
 }
