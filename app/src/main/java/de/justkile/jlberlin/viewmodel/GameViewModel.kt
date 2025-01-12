@@ -92,12 +92,12 @@ class GameViewModel(
         _teams.value = teamRepository.getTeams()
     }
 
-    fun claimDistrict(district: District, team: Team) {
+    fun claimDistrict(district: District, team: Team, claimTimeInSeconds: Int) {
         Log.i("GameViewModel", "Claiming district $district for team $team")
         _district2claimState[district]!!.value = ClaimState(team)
 
         viewModelScope.launch {
-            claimRepository.createOrUpdate(DistrictClaim(district.name, team.name))
+            claimRepository.createOrUpdate(DistrictClaim(district.name, claimTimeInSeconds, team.name))
         }
     }
 
