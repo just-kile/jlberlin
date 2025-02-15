@@ -5,8 +5,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.justkile.jlberlin.model.District
+import de.justkile.jlberlin.model.HistoryEntry
 import de.justkile.jlberlin.repository.ClaimRepository
 import de.justkile.jlberlin.repository.DistrictRepository
+import de.justkile.jlberlin.repository.HistoryRepository
 import de.justkile.jlberlin.repository.LocationDataRepository
 import de.justkile.jlberlin.repository.TeamRepository
 import de.justkile.jlberlin.ui.theme.TeamColors
@@ -32,7 +34,8 @@ class GameViewModel(
     private val districtRepository: DistrictRepository,
     private val teamRepository: TeamRepository,
     private val locationRepository: LocationDataRepository,
-    private val claimRepository: ClaimRepository
+    private val claimRepository: ClaimRepository,
+    private val historyRepository: HistoryRepository
 ) : ViewModel() {
 
     // static data
@@ -93,6 +96,7 @@ class GameViewModel(
 
         viewModelScope.launch {
             claimRepository.createOrUpdate(DistrictClaim(district.name, claimTimeInSeconds, team.name))
+            historyRepository.createHistory(team.name, district.name, claimTimeInSeconds)
         }
     }
 
@@ -120,6 +124,14 @@ class GameViewModel(
         _team2Score.value= teams.value.map { team ->
             ColoredTeam(team.name, team2teamColor[team]!!) to claims.count{ it.teamName == team.name}
         }.sortedBy { (_, value) -> -value }.toMap()
+    }
+
+    val history = historyRepository.history
+
+    init {
+        viewModelScope.launch {
+            historyRepository.listenForUpdates()
+        }
     }
 
 

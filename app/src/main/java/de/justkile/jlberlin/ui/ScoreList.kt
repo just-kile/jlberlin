@@ -27,15 +27,8 @@ fun ScoreList(team2score: Map<ColoredTeam, Int>) {
     LazyColumn {
         team2score.forEach { (team, score) ->
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(2.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                    ),
-                    border = BorderStroke(2.dp, team.color),
-                ) {
+                TeamCard(team) {
                     Text(
-                        modifier = Modifier.padding(8.dp),
                         style = MaterialTheme.typography.headlineMedium,
                         text = "${team.name}: $score"
                     )

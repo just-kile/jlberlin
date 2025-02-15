@@ -58,14 +58,17 @@ import com.google.maps.android.compose.Polygon
 import com.google.maps.android.compose.rememberCameraPositionState
 import de.justkile.jlberlin.datasource.ClaimRemoteDataSource
 import de.justkile.jlberlin.datasource.DistrictLocalDataSource
+import de.justkile.jlberlin.datasource.HistoryRemoteDataSource
 import de.justkile.jlberlin.datasource.LocationRemoteDataSource
 import de.justkile.jlberlin.datasource.TeamRemoteDataSource
 import de.justkile.jlberlin.model.District
 import de.justkile.jlberlin.model.Districts
 import de.justkile.jlberlin.repository.ClaimRepository
 import de.justkile.jlberlin.repository.DistrictRepository
+import de.justkile.jlberlin.repository.HistoryRepository
 import de.justkile.jlberlin.repository.LocationDataRepository
 import de.justkile.jlberlin.repository.TeamRepository
+import de.justkile.jlberlin.ui.HistoryList
 import de.justkile.jlberlin.ui.ScoreList
 import de.justkile.jlberlin.ui.TextWithLabel
 import de.justkile.jlberlin.ui.mapcontrol.ClaimingDistrict
@@ -96,18 +99,23 @@ class MainActivity : ComponentActivity() {
 
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
+        val teamRepository = TeamRepository(
+            TeamRemoteDataSource()
+        )
         viewModel = GameViewModel(
             DistrictRepository(
                 DistrictLocalDataSource(this)
             ),
-            TeamRepository(
-                TeamRemoteDataSource()
-            ),
+            teamRepository,
             LocationDataRepository(
                 LocationRemoteDataSource(fusedLocationClient)
             ),
             ClaimRepository(
                 ClaimRemoteDataSource()
+            ),
+            HistoryRepository(
+                HistoryRemoteDataSource(),
+                teamRepository
             )
         )
 
@@ -154,17 +162,18 @@ class MainActivity : ComponentActivity() {
     ) {
         NavHost(
             navController = navController,
-            startDestination = AppDestinations.HOME.name
+            startDestination = AppDestinations.MAP.name
         ) {
-            composable(AppDestinations.HOME.name) {
+            composable(AppDestinations.SCORE_BOARD.name) {
                 val team2score by viewModel.team2Score.collectAsState()
                 ScoreList(team2score)
             }
             composable(AppDestinations.MAP.name) {
                 DistrictMap(districts)
             }
-            composable(AppDestinations.SCORE_BOARD.name) {
-                ClaimDistrict(districts)
+            composable(AppDestinations.HISTORY.name) {
+                val history by viewModel.history.collectAsState()
+                HistoryList(history)
             }
         }
     }
@@ -231,35 +240,6 @@ class MainActivity : ComponentActivity() {
                 Text("JL Berlin")
             }
         )
-    }
-
-    @Composable
-    fun ClaimDistrict(districts: Districts) {
-
-        val selectedDistrict = remember { mutableStateOf("") }
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-        )
-        {
-            val field = AutoComplete(districts.districts.map { it.name }, onValueChanged = {
-                selectedDistrict.value = it
-                Log.i("ClaimDistrict", "Selected district: $it")
-            })
-            Button(
-                onClick = {
-                    Log.i("ClaimDistrict", "Claiming district ${selectedDistrict.value}")
-                    val district = districts.districts.find { it.name == selectedDistrict.value }!!
-                    viewModel.claimDistrict(district, viewModel.team.value!!, 60)
-                },
-                modifier = Modifier
-                    .padding(16.dp)
-            ) {
-                Text("Claim District")
-            }
-
-        }
     }
 
     @Composable
