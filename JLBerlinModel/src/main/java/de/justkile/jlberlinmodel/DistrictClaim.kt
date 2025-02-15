@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class DistrictClaim (
-    val districtName: String,
+    val districtName: String = "",
     val claimTimeInSeconds: Int = 0,
     val teamName: String? = null
 ) {

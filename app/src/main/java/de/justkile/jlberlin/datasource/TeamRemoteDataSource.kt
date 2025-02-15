@@ -13,6 +13,8 @@ import kotlinx.coroutines.tasks.await
 
 private const val TEAMS_ENDPOINT = "${BackendClient.BASE_URL}/teams"
 
+private const val COLLECTION_NAME = "teams"
+
 class TeamRemoteDataSource {
 
     fun addListener(
@@ -20,7 +22,7 @@ class TeamRemoteDataSource {
         onError: (Throwable) -> Unit
     ) {
         Firebase.firestore
-            .collection("teams")
+            .collection(COLLECTION_NAME)
             .addSnapshotListener { value, error ->
                 Log.i("TeamRemoteDataSource", "Teams changed")
                 if (error != null) {
@@ -33,14 +35,14 @@ class TeamRemoteDataSource {
 
     suspend fun getTeams(): List<Team> =
         Firebase.firestore
-            .collection("teams")
+            .collection(COLLECTION_NAME)
             .get()
             .await()
             .toObjects(Team::class.java)
 
     fun createNewTeam(team: Team) =
         Firebase.firestore
-            .collection("teams")
+            .collection(COLLECTION_NAME)
             .add(team)
 
 

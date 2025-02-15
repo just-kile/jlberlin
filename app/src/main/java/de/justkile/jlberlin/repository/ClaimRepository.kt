@@ -1,5 +1,6 @@
 package de.justkile.jlberlin.repository
 
+import android.util.Log
 import de.justkile.jlberlin.datasource.ClaimRemoteDataSource
 import de.justkile.jlberlinmodel.DistrictClaim
 import kotlinx.coroutines.CoroutineDispatcher
@@ -19,8 +20,11 @@ class ClaimRepository (
 
     suspend fun createOrUpdate(claim: DistrictClaim) = claimRemoteDataSource.createOrUpdate(claim)
 
-    suspend fun listenForNewClaims() {
-        claimRemoteDataSource.listenForNewClaims { _currentClaims.value = it }
+    fun listenForNewClaims() {
+        claimRemoteDataSource.addListener(
+            onClaimsChanged = { _currentClaims.value = it },
+            onError = { Log.e("ClaimRepository","Error while listening for new claims", it) }
+        )
     }
 
 }
