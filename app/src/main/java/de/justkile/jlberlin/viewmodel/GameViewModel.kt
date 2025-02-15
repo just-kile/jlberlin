@@ -44,12 +44,11 @@ class GameViewModel(
 
     val currentLocation = locationRepository.currentLocation.asStateFlow()
 
-    private var _teams = MutableStateFlow<List<Team>>(emptyList())
-    val teams = _teams.asStateFlow()
+    val teams = teamRepository.teams
 
     init {
         viewModelScope.launch {
-            _teams.value = teamRepository.getTeams()
+            teamRepository.listenForNewTeams()
         }
     }
 
@@ -76,7 +75,7 @@ class GameViewModel(
     private fun processClaims(claims: List<DistrictClaim>) {
         claims.forEach { claim ->
             val district = districts.districts.find { it.name == claim.districtName }!!
-            val team = _teams.value.find { it.name == claim.teamName }
+            val team = teams.value.find { it.name == claim.teamName }
             _district2claimState[district]!!.value = ClaimState(team, claim.claimTimeInSeconds)
         }
     }
@@ -90,7 +89,6 @@ class GameViewModel(
 
     fun createNewTeam(teamName: String) = viewModelScope.launch {
         teamRepository.createNewTeam(teamName)
-        _teams.value = teamRepository.getTeams()
     }
 
     fun claimDistrict(district: District, team: Team, claimTimeInSeconds: Int) {
