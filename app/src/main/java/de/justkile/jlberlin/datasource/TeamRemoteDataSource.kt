@@ -3,15 +3,8 @@ package de.justkile.jlberlin.datasource
 import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
-import de.justkile.jlberlin.BackendClient
 import de.justkile.jlberlinmodel.Team
-import io.ktor.client.call.body
-import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
 import kotlinx.coroutines.tasks.await
-
-private const val TEAMS_ENDPOINT = "${BackendClient.BASE_URL}/teams"
 
 private const val COLLECTION_NAME = "teams"
 

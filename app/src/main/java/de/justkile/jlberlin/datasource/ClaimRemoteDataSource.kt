@@ -1,20 +1,8 @@
 package de.justkile.jlberlin.datasource
 
-import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
-import de.justkile.jlberlin.BackendClient
-import de.justkile.jlberlin.viewmodel.ClaimState
 import de.justkile.jlberlinmodel.DistrictClaim
-import de.justkile.jlberlinmodel.Team
-import io.ktor.client.call.body
-import io.ktor.client.plugins.sse.sse
-import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 
 

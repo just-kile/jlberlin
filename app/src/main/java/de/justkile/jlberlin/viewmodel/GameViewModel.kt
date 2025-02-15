@@ -1,11 +1,9 @@
 package de.justkile.jlberlin.viewmodel
 
 import android.util.Log
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import de.justkile.jlberlin.BackendClient
 import de.justkile.jlberlin.model.District
 import de.justkile.jlberlin.repository.ClaimRepository
 import de.justkile.jlberlin.repository.DistrictRepository
@@ -16,8 +14,6 @@ import de.justkile.jlberlinmodel.DistrictClaim
 import de.justkile.jlberlinmodel.Team
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 data class ClaimState(

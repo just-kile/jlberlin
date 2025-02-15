@@ -23,4 +23,3 @@ rootProject.name = "JLBerlin"
 include(":app")
 include(":JLBerlinSim")
 include(":JLBerlinModel")
-include(":JLBerlinServer")

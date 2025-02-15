@@ -1,14 +1,10 @@
 package de.justkile.jlberlin.repository
 
 import android.util.Log
-import androidx.lifecycle.viewModelScope
-import de.justkile.jlberlin.BackendClient
 import de.justkile.jlberlin.datasource.TeamRemoteDataSource
-import de.justkile.jlberlinmodel.DistrictClaim
 import de.justkile.jlberlinmodel.Team
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 class TeamRepository (
     private val teamRemoteDataSource: TeamRemoteDataSource
