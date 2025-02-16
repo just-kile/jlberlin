@@ -36,7 +36,8 @@ fun CurrentDistrict(
 
         buttonArea = {
             Button(
-                onClick = onClaim
+                onClick = onClaim,
+                enabled = district != null
             ) {
                 Text(text = "Claim")
             }
