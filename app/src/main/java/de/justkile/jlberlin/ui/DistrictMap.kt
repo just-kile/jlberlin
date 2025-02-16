@@ -10,11 +10,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -134,26 +136,30 @@ private fun MapLayer(
     }
 
     val maxEpsilon = 1e-3
-    val minEpsilon = 1e-5
+    val minEpsilon = 1e-6
     val steps = 10
     var epsilon by remember { mutableStateOf(1e-3) }
 
 
-    LaunchedEffect(cameraPositionState.isMoving) {
-        if (cameraPositionState.projection != null) {
-            val accuracy = 2
-            val proj1 = cameraPositionState.projection!!.fromScreenLocation(Point(0, 0))
-            val proj2 = cameraPositionState.projection!!.fromScreenLocation(Point(accuracy, accuracy))
-            val diff = sqrt((proj1.latitude - proj2.latitude).pow(2) + (proj1.longitude - proj2.longitude).pow(2))
+    LaunchedEffect(Unit) {
+        snapshotFlow {cameraPositionState.position.zoom}.collect {
+            if (cameraPositionState.projection != null) {
+                val accuracy = 2
+                val proj1 = cameraPositionState.projection!!.fromScreenLocation(Point(0, 0))
+                val proj2 = cameraPositionState.projection!!.fromScreenLocation(Point(accuracy, accuracy))
+                val diff = sqrt((proj1.latitude - proj2.latitude).pow(2) + (proj1.longitude - proj2.longitude).pow(2))
 
 
-            val newEpsilon = calcClosestStep(minEpsilon, maxEpsilon, diff, steps)
-            if (newEpsilon != epsilon) {
-                Log.i("DistrictMap", "MapLayer(...) ADJUSTED EPSILON: $epsilon -> $newEpsilon, diff: $diff")
-                epsilon = newEpsilon
+                val newEpsilon = calcClosestStep(minEpsilon, maxEpsilon, diff, steps)
+                if (newEpsilon < epsilon) {
+                    Log.i("DistrictMap", "MapLayer(...) ADJUSTED EPSILON: $epsilon -> $newEpsilon, diff: $diff")
+                    epsilon = newEpsilon
+                }
             }
         }
+
     }
+
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -164,6 +170,7 @@ private fun MapLayer(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
             properties = MapProperties(isMyLocationEnabled = true),
+
         ) {
 
             var newNumberOfRenderedPolygons = 0
