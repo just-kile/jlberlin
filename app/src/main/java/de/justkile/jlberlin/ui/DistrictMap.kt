@@ -72,7 +72,13 @@ fun DistrictMap(
             district2claimState = district2claimState,
             selectedDistrict = selectedDistrict,
             team2teamColor = team2teamColor,
-            onSelectDistrict = { selectedDistrict = it })
+            onSelectDistrict = {
+                if(selectedDistrict == it) {
+                    selectedDistrict = null
+                } else {
+                    selectedDistrict = it
+                }
+            })
 
     }
 }
