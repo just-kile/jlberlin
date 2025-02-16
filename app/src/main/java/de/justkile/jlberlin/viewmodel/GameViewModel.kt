@@ -1,6 +1,8 @@
 package de.justkile.jlberlin.viewmodel
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -41,7 +43,22 @@ class GameViewModel(
     // static data
     val districts = districtRepository.getDistricts()
 
-    val currentLocation = locationRepository.currentLocation.asStateFlow()
+    private val _currentLocation = locationRepository.currentLocation.asStateFlow()
+    private val _currentDistrict = MutableStateFlow<District?>(null)
+    val currentDistrict = _currentDistrict.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            _currentLocation.collect { coordinate ->
+                if (coordinate != null) {
+                    val newDistrict = districts.findDistrictByCoordinate(coordinate)
+                    if (newDistrict != _currentDistrict.value) {
+                        _currentDistrict.value = newDistrict
+                    }
+                }
+            }
+        }
+    }
 
     val teams = teamRepository.teams
 

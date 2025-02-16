@@ -148,12 +148,12 @@ class MainActivity : ComponentActivity() {
             composable(AppDestinations.MAP.name) {
                 val teams by viewModel.teams.collectAsState()
                 val currentTeam by viewModel.team.collectAsState()
-                val currentLocation by viewModel.currentLocation.collectAsState()
+                val currentDistrict by viewModel.currentDistrict.collectAsState()
                 DistrictMap(
                     districts = districts,
                     teams = teams,
                     currentTeam = currentTeam!!,
-                    currentLocation = currentLocation,
+                    currentDistrict = currentDistrict,
                     district2claimState = viewModel::district2claimState,
                     claimDistrict = viewModel::claimDistrict
                 )
