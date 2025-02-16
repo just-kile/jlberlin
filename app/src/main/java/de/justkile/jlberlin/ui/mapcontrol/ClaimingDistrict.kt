@@ -9,9 +9,6 @@ import de.justkile.jlberlin.model.District
 import de.justkile.jlberlin.ui.TextWithLabel
 import de.justkile.jlberlin.viewmodel.ClaimState
 import de.justkile.jlberlinmodel.Team
-import kotlin.time.Duration
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 @Composable
 fun ClaimingDistrict(
@@ -25,7 +22,7 @@ fun ClaimingDistrict(
         contentArea = {
             Column  {
                 TextWithLabel(
-                    label = "Claming ${district.name}",
+                    label = "Claiming ${district.name}",
                     value = "%01d:%02d".format(time / 60, time % 60),
                     info = "Don't move!"
                 )
