@@ -1,8 +1,5 @@
 package de.justkile.jlberlinmodel
 
-import de.justkile.jlberlin.model.Coordinate
-import de.justkile.jlberlin.model.District
-import de.justkile.jlberlin.model.Districts
 import java.io.FileInputStream
 import java.io.InputStream
 import kotlinx.serialization.json.Json

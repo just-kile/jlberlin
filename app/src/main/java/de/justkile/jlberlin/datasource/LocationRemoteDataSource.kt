@@ -3,11 +3,9 @@ package de.justkile.jlberlin.datasource
 import android.annotation.SuppressLint
 import android.os.Looper
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationListener
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.Priority
-import de.justkile.jlberlin.model.Coordinate
+import de.justkile.jlberlinmodel.Coordinate
 
 class LocationRemoteDataSource(
     private val locationProvider: FusedLocationProviderClient

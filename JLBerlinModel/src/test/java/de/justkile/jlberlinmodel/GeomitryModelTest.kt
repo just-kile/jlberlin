@@ -1,7 +1,7 @@
 package de.justkile.jlberlin
 
-import de.justkile.jlberlin.model.Coordinate
-import de.justkile.jlberlin.model.District
+import de.justkile.jlberlinmodel.Coordinate
+import de.justkile.jlberlinmodel.District
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import org.junit.Test

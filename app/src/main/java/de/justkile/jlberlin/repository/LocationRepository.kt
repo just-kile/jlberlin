@@ -2,8 +2,7 @@ package de.justkile.jlberlin.repository
 
 import android.util.Log
 import de.justkile.jlberlin.datasource.LocationRemoteDataSource
-import de.justkile.jlberlin.model.Coordinate
-import kotlinx.coroutines.flow.Flow
+import de.justkile.jlberlinmodel.Coordinate
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class LocationDataRepository(

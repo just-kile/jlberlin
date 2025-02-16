@@ -1,6 +1,6 @@
 package de.justkile.jlberlin
 
-import de.justkile.jlberlin.model.Coordinate
+import de.justkile.jlberlinmodel.Coordinate
 import org.junit.Test
 
 import org.junit.Assert.*

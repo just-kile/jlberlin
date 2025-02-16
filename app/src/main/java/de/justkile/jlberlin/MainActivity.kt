@@ -45,7 +45,7 @@ import de.justkile.jlberlin.datasource.DistrictLocalDataSource
 import de.justkile.jlberlin.datasource.HistoryRemoteDataSource
 import de.justkile.jlberlin.datasource.LocationRemoteDataSource
 import de.justkile.jlberlin.datasource.TeamRemoteDataSource
-import de.justkile.jlberlin.model.Districts
+import de.justkile.jlberlinmodel.Districts
 import de.justkile.jlberlin.repository.ClaimRepository
 import de.justkile.jlberlin.repository.DistrictRepository
 import de.justkile.jlberlin.repository.HistoryRepository

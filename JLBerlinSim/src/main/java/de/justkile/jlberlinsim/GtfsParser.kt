@@ -1,7 +1,7 @@
 package de.justkile.jlberlinsim
 
 import com.opencsv.CSVReader
-import de.justkile.jlberlin.model.District
+import de.justkile.jlberlinmodel.District
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader

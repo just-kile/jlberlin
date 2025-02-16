@@ -2,8 +2,8 @@ package de.justkile.jlberlinsim
 
 import de.justkile.jlberlinmodel.GeoJsonParser
 import java.io.FileInputStream
-import de.justkile.jlberlin.model.Coordinate
-import de.justkile.jlberlin.model.District
+import de.justkile.jlberlinmodel.Coordinate
+import de.justkile.jlberlinmodel.District
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime

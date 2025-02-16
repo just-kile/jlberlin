@@ -1,9 +1,12 @@
 package de.justkile.jlberlin.ui
 
 import android.annotation.SuppressLint
+import android.graphics.Point
 import android.util.Log
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -11,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,29 +24,30 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.Polygon
 import com.google.maps.android.compose.rememberCameraPositionState
-import de.justkile.jlberlin.model.Coordinate
-import de.justkile.jlberlin.model.District
-import de.justkile.jlberlin.model.Districts
 import de.justkile.jlberlin.ui.mapcontrol.ClaimingDistrict
 import de.justkile.jlberlin.ui.mapcontrol.CurrentDistrict
 import de.justkile.jlberlin.ui.mapcontrol.SelectedDistrict
 import de.justkile.jlberlin.ui.theme.TeamColors
 import de.justkile.jlberlin.viewmodel.ClaimState
 import de.justkile.jlberlin.viewmodel.TimerViewModel
+import de.justkile.jlberlinmodel.Coordinate
+import de.justkile.jlberlinmodel.District
+import de.justkile.jlberlinmodel.Districts
 import de.justkile.jlberlinmodel.Team
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 @SuppressLint("MissingPermission")
 @Composable
-fun DistrictMap(districts: Districts,
-                teams: List<Team>,
-                currentTeam: Team,
-                currentDistrict: District?,
-                district2claimState: (District) -> StateFlow<ClaimState>,
-                claimDistrict: (District, Team, Int) -> Unit,
-                ) {
+fun DistrictMap(
+    districts: Districts,
+    teams: List<Team>,
+    currentTeam: Team,
+    currentDistrict: District?,
+    district2claimState: (District) -> StateFlow<ClaimState>,
+    claimDistrict: (District, Team, Int) -> Unit,
+) {
     Log.i("DistrictMap", "DistrictMap(...) COMPOSE")
 
     val colors = TeamColors
@@ -53,26 +56,21 @@ fun DistrictMap(districts: Districts,
     var selectedDistrict by remember { mutableStateOf<District?>(null) }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
 
-        DistrictControls(
-            currentDistrict = currentDistrict,
+        DistrictControls(currentDistrict = currentDistrict,
             district2claimState = district2claimState,
             claimDistrict = claimDistrict,
             currentTeam = currentTeam,
             selectedDistrict = selectedDistrict,
-            onUnselectDistrict = { selectedDistrict = null }
-        )
+            onUnselectDistrict = { selectedDistrict = null })
 
-        MapLayer(
-            districts = districts,
+        MapLayer(districts = districts,
             district2claimState = district2claimState,
             selectedDistrict = selectedDistrict,
             team2teamColor = team2teamColor,
-            onSelectDistrict = { selectedDistrict = it}
-        )
+            onSelectDistrict = { selectedDistrict = it })
 
     }
 }
@@ -91,33 +89,27 @@ private fun DistrictControls(
 
     if (isClaiming) {
         val time by timerViewModel.time.collectAsState()
-        ClaimingDistrict(
-            time = time,
+        ClaimingDistrict(time = time,
             district = currentDistrict!!,
             claimedBy = currentDistrict.let { district2claimState(it).collectAsState().value },
             onClaimCompleted = {
                 isClaiming = false
                 claimDistrict(
-                    currentDistrict,
-                    currentTeam,
-                    time - time % 60
+                    currentDistrict, currentTeam, time - time % 60
                 )
                 timerViewModel.stopTimer()
             },
             onClaimAborted = {
                 isClaiming = false
                 timerViewModel.stopTimer()
-            }
-        )
+            })
     } else if (selectedDistrict == null) {
-        CurrentDistrict(
-            district = currentDistrict,
+        CurrentDistrict(district = currentDistrict,
             claimedBy = currentDistrict?.let { district2claimState(it).collectAsState().value },
             onClaim = {
                 isClaiming = true
                 timerViewModel.startTimer()
-            }
-        )
+            })
     } else {
         SelectedDistrict(
             district = selectedDistrict,
@@ -137,56 +129,92 @@ private fun MapLayer(
 ) {
     Log.i("DistrictMap", "MapLayer(...) COMPOSE")
 
-    val berlin = LatLng(52.520008, 13.404954)
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(berlin, 10f)
+        position = CameraPosition.fromLatLngZoom(toLatLng(districts.center), 9.5f)
     }
 
-    var levelOfDetail by remember { mutableIntStateOf(250) }
-    val scope = rememberCoroutineScope()
-    LaunchedEffect(true) {
-        scope.launch {
-            while (levelOfDetail > 4) {
-                delay(500)
-                levelOfDetail /= 4
+    val maxEpsilon = 1e-3
+    val minEpsilon = 1e-5
+    val steps = 10
+    var epsilon by remember { mutableStateOf(1e-3) }
+
+
+    LaunchedEffect(cameraPositionState.isMoving) {
+        if (cameraPositionState.projection != null) {
+            val accuracy = 2
+            val proj1 = cameraPositionState.projection!!.fromScreenLocation(Point(0, 0))
+            val proj2 = cameraPositionState.projection!!.fromScreenLocation(Point(accuracy, accuracy))
+            val diff = sqrt((proj1.latitude - proj2.latitude).pow(2) + (proj1.longitude - proj2.longitude).pow(2))
+
+
+            val newEpsilon = calcClosestStep(minEpsilon, maxEpsilon, diff, steps)
+            if (newEpsilon != epsilon) {
+                Log.i("DistrictMap", "MapLayer(...) ADJUSTED EPSILON: $epsilon -> $newEpsilon, diff: $diff")
+                epsilon = newEpsilon
             }
-            levelOfDetail = 1
         }
-
     }
 
-    GoogleMap(
-        modifier = Modifier
-            .fillMaxSize(),
-        cameraPositionState = cameraPositionState,
-        properties = MapProperties(isMyLocationEnabled = true)
-
+    Box(
+        modifier = Modifier.fillMaxSize(),
     ) {
 
-        districts.districts.forEach { district ->
-            district.coordinates.forEach { coordinates ->
 
-                val claimState by district2claimState(district).collectAsState()
-                val color =
-                    if (selectedDistrict == district) Color.Yellow.copy(alpha = 0.6f) else if (claimState.isClaimed()) team2teamColor[claimState.team]!!.copy(
-                        alpha = 0.4f
-                    ) else Color.Black.copy(alpha = 0.4f)
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState,
+            properties = MapProperties(isMyLocationEnabled = true),
+        ) {
 
-                val points =
-                    coordinates.filterIndexed { index, _ -> index % levelOfDetail == 0 }
-                        .map { LatLng(it.latitude, it.longitude) }
+            var newNumberOfRenderedPolygons = 0
+            var newNumberOfRenderedPoints = 0
 
-                Polygon(
-                    points = points,
-                    fillColor = color,
-                    strokeColor = Color.Black,
-                    onClick = {
-                        onSelectDistrict(district)
-                    },
-                    clickable = true
-                )
+            districts.districts.forEach { district ->
 
+                val reducedCoordinates = district.calcCoordinatesForLevelOfDetail(epsilon)
+
+                reducedCoordinates.forEach { coordinates ->
+
+                    newNumberOfRenderedPolygons++
+
+                    val claimState by district2claimState(district).collectAsState()
+                    val color =
+                        if (selectedDistrict == district) Color.Yellow.copy(alpha = 0.6f) else if (claimState.isClaimed()) team2teamColor[claimState.team]!!.copy(
+                            alpha = 0.4f
+                        ) else Color.Black.copy(alpha = 0.4f)
+
+                    val points = coordinates.map { toLatLng(it) }
+
+                    newNumberOfRenderedPoints += points.size
+
+                    Polygon(
+                        points = points, fillColor = color, strokeColor = Color.Black, onClick = {
+                            onSelectDistrict(district)
+                        }, clickable = true
+                    )
+
+                }
             }
+
+            Log.i("DistrictMap", "MapLayer(...) COMPOSED: $newNumberOfRenderedPolygons polygons, $newNumberOfRenderedPoints points, epsilon: $epsilon")
+
         }
+
+
     }
+
 }
+
+private fun toLatLng(coordinate: Coordinate): LatLng = LatLng(coordinate.latitude, coordinate.longitude)
+
+private fun calcClosestStep(minValue: Double, maxValue: Double, actualValue: Double, steps: Int): Double {
+    if (actualValue <= minValue) return minValue
+    if (actualValue >= maxValue) return maxValue
+
+    val stepSize = (maxValue - minValue) / steps
+    val closestStep = ((actualValue - minValue) / stepSize).roundToInt() * stepSize + minValue
+
+    return closestStep
+}
+
+private fun Double.roundToInt(): Int = kotlin.math.round(this).toInt()
