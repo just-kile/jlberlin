@@ -1,9 +1,8 @@
 package de.justkile.jlberlin.datasource
 
-import android.util.Log
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.firestore
-import de.justkile.jlberlinmodel.Team
 import kotlinx.coroutines.tasks.await
 
 private const val COLLECTION_NAME = "histories"
@@ -23,6 +22,7 @@ class HistoryRemoteDataSource {
     ) {
         Firebase.firestore
             .collection(COLLECTION_NAME)
+            .orderBy("claimedAt",  Query.Direction.DESCENDING)
             .addSnapshotListener { value, error ->
                 if (error != null) {
                     onError(error)
@@ -35,6 +35,7 @@ class HistoryRemoteDataSource {
     suspend fun getHistory(): List<HistoryData> =
         Firebase.firestore
             .collection(COLLECTION_NAME)
+            .orderBy("claimedAt",  Query.Direction.DESCENDING)
             .get()
             .await()
             .toObjects(HistoryData::class.java)
