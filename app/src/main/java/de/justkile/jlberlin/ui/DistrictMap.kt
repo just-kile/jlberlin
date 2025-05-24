@@ -100,11 +100,11 @@ private fun DistrictControls(
         val time by timerViewModel.time.collectAsState()
         ClaimingDistrict(time = time,
             district = districtBeingClaimed!!,
-            claimedBy = districtBeingClaimed.let { district2claimState(it).collectAsState().value },
+            claimedBy = district2claimState(districtBeingClaimed!!).collectAsState().value,
             onClaimCompleted = {
                 isClaiming = false
                 claimDistrict(
-                    districtBeingClaimed, currentTeam, time - time % 60
+                    districtBeingClaimed!!, currentTeam, time - time % 60
                 )
                 timerViewModel.stopTimer()
                 districtBeingClaimed = null
