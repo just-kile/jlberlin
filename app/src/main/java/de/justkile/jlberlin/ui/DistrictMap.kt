@@ -31,6 +31,7 @@ import de.justkile.jlberlin.ui.mapcontrol.CurrentDistrict
 import de.justkile.jlberlin.ui.mapcontrol.SelectedDistrict
 import de.justkile.jlberlin.ui.theme.TeamColors
 import de.justkile.jlberlin.viewmodel.ClaimState
+import de.justkile.jlberlin.viewmodel.GameViewModel
 import de.justkile.jlberlin.viewmodel.TimerViewModel
 import de.justkile.jlberlinmodel.Coordinate
 import de.justkile.jlberlinmodel.District
@@ -49,6 +50,7 @@ fun DistrictMap(
     currentDistrict: District?,
     district2claimState: (District) -> StateFlow<ClaimState>,
     claimDistrict: (District, Team, Int) -> Unit,
+    gameViewModel: GameViewModel
 ) {
     Log.i("DistrictMap", "DistrictMap(...) COMPOSE")
 
@@ -56,9 +58,6 @@ fun DistrictMap(
     val team2teamColor = teams.associateWith { colors[teams.indexOf(it)] }
 
     var selectedDistrict by remember { mutableStateOf<District?>(null) }
-    
-    // Get the GameViewModel from the parent
-    val gameViewModel = viewModel<GameViewModel>()
 
     Column(
         modifier = Modifier.fillMaxSize()
