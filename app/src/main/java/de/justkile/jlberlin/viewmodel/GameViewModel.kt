@@ -14,6 +14,7 @@ import de.justkile.jlberlin.ui.theme.TeamColors
 import de.justkile.jlberlinmodel.DistrictClaim
 import de.justkile.jlberlinmodel.Team
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
@@ -36,6 +37,20 @@ class GameViewModel(
     private val claimRepository: ClaimRepository,
     private val historyRepository: HistoryRepository
 ) : ViewModel() {
+
+    // Timer ViewModel to handle claiming process
+    private val timerViewModel = TimerViewModel()
+    val isClaiming: StateFlow<Boolean> = timerViewModel.isClaiming
+    val districtBeingClaimed: StateFlow<District?> = timerViewModel.districtBeingClaimed
+    val timerValue: StateFlow<Int> = timerViewModel.time
+    
+    fun startClaimingDistrict(district: District) {
+        timerViewModel.startTimer(district)
+    }
+    
+    fun stopClaimingDistrict() {
+        timerViewModel.stopTimer()
+    }
 
     // static data
     val districts = districtRepository.getDistricts()
