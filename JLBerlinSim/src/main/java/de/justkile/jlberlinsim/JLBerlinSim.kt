@@ -4,6 +4,7 @@ import de.justkile.jlberlinmodel.GeoJsonParser
 import java.io.FileInputStream
 import de.justkile.jlberlinmodel.Coordinate
 import de.justkile.jlberlinmodel.District
+import de.justkile.jlberlinmodel.Districts
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -14,7 +15,7 @@ import java.time.temporal.ChronoUnit
 
 class JLBerlinSim {
 
-    private var districts: List<District>? = null
+    private var districts: Districts? = null
     private var stops = emptyList<Stop>()
     private var stopId2stop = emptyMap<String, Stop>()
     private var stopTimes: List<StopTime> = emptyList()
@@ -237,11 +238,11 @@ class JLBerlinSim {
 
     private fun prepareDate() {
         val inputStream =
-            FileInputStream("D:\\workspaces\\jl-berlin\\JLBerlin\\app\\src\\main\\res\\raw\\lor_ortsteile.geojson")
+            FileInputStream("../app/src/main/res/raw/lor_ortsteile.geojson")
         districts = GeoJsonParser().parseGeoJson(inputStream)
 
         stops = logTime("stops") { GtfsParser().parseStopsCsv() }
-        stops = setDistrictForStops(stops, districts!!).filter { it.district != null }
+        stops = setDistrictForStops(stops, districts!!.districts).filter { it.district != null }
         stopId2stop = logTime("stopId2stop") { stops.associateBy { it.stopId } }
 
         stopTimes = logTime("stopTimes") { GtfsParser().parseStopTimesCsv(stopId2stop) }
@@ -260,7 +261,7 @@ class JLBerlinSim {
         routes = logTime("routes") { GtfsParser().parseRoutesCsv() }
         routeId2routes = routes.associateBy { it.routeId }
 
-        stops = setDistrictForStops(stops, districts!!)
+        stops = setDistrictForStops(stops, districts!!.districts)
 
         val stationId2departureCounts = stationId2stopTimes.mapValues { it.value.size}
         val maxDepartures = stationId2departureCounts.values.maxOrNull() ?: 1
