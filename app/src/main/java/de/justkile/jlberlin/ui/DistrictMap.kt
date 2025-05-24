@@ -94,27 +94,31 @@ private fun DistrictControls(
 ) {
     var isClaiming by remember { mutableStateOf(false) }
     val timerViewModel = viewModel<TimerViewModel>()
+    var districtBeingClaimed by remember { mutableStateOf<District?>(null) }
 
     if (isClaiming) {
         val time by timerViewModel.time.collectAsState()
         ClaimingDistrict(time = time,
-            district = currentDistrict!!,
-            claimedBy = currentDistrict.let { district2claimState(it).collectAsState().value },
+            district = districtBeingClaimed!!,
+            claimedBy = districtBeingClaimed.let { district2claimState(it).collectAsState().value },
             onClaimCompleted = {
                 isClaiming = false
                 claimDistrict(
-                    currentDistrict, currentTeam, time - time % 60
+                    districtBeingClaimed, currentTeam, time - time % 60
                 )
                 timerViewModel.stopTimer()
+                districtBeingClaimed = null
             },
             onClaimAborted = {
                 isClaiming = false
                 timerViewModel.stopTimer()
+                districtBeingClaimed = null
             })
     } else if (selectedDistrict == null) {
         CurrentDistrict(district = currentDistrict,
             claimedBy = currentDistrict?.let { district2claimState(it).collectAsState().value },
             onClaim = {
+                districtBeingClaimed = currentDistrict
                 isClaiming = true
                 timerViewModel.startTimer()
             })
