@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -79,24 +80,27 @@ class MainActivity : ComponentActivity() {
         val teamRepository = TeamRepository(
             TeamRemoteDataSource()
         )
-        viewModel = GameViewModel(
-            DistrictRepository(
-                DistrictLocalDataSource(this)
-            ),
-            teamRepository,
-            LocationDataRepository(
-                LocationRemoteDataSource(fusedLocationClient)
-            ),
-            ClaimRepository(
-                ClaimRemoteDataSource()
-            ),
-            HistoryRepository(
-                HistoryRemoteDataSource(),
-                teamRepository
-            )
-        )
+
 
         setContent {
+            viewModel = viewModel { GameViewModel(
+                    DistrictRepository(
+                        DistrictLocalDataSource(this@MainActivity)
+                    ),
+                    teamRepository,
+                    LocationDataRepository(
+                        LocationRemoteDataSource(fusedLocationClient)
+                    ),
+                    ClaimRepository(
+                        ClaimRemoteDataSource()
+                    ),
+                    HistoryRepository(
+                        HistoryRemoteDataSource(),
+                        teamRepository
+                    )
+                )
+            }
+
             val navController = rememberNavController()
 
             val team by viewModel.team.collectAsState()
@@ -155,7 +159,8 @@ class MainActivity : ComponentActivity() {
                     currentTeam = currentTeam!!,
                     currentDistrict = currentDistrict,
                     district2claimState = viewModel::district2claimState,
-                    claimDistrict = viewModel::claimDistrict
+                    claimDistrict = viewModel::claimDistrict,
+                    gameViewModel = viewModel
                 )
             }
             composable(AppDestinations.HISTORY.name) {

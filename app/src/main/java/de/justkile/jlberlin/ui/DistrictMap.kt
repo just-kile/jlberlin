@@ -31,6 +31,7 @@ import de.justkile.jlberlin.ui.mapcontrol.CurrentDistrict
 import de.justkile.jlberlin.ui.mapcontrol.SelectedDistrict
 import de.justkile.jlberlin.ui.theme.TeamColors
 import de.justkile.jlberlin.viewmodel.ClaimState
+import de.justkile.jlberlin.viewmodel.GameViewModel
 import de.justkile.jlberlin.viewmodel.TimerViewModel
 import de.justkile.jlberlinmodel.Coordinate
 import de.justkile.jlberlinmodel.District
@@ -49,6 +50,7 @@ fun DistrictMap(
     currentDistrict: District?,
     district2claimState: (District) -> StateFlow<ClaimState>,
     claimDistrict: (District, Team, Int) -> Unit,
+    gameViewModel: GameViewModel
 ) {
     Log.i("DistrictMap", "DistrictMap(...) COMPOSE")
 
@@ -61,12 +63,19 @@ fun DistrictMap(
         modifier = Modifier.fillMaxSize()
     ) {
 
-        DistrictControls(currentDistrict = currentDistrict,
+        DistrictControls(
+            currentDistrict = currentDistrict,
             district2claimState = district2claimState,
             claimDistrict = claimDistrict,
             currentTeam = currentTeam,
             selectedDistrict = selectedDistrict,
-            onUnselectDistrict = { selectedDistrict = null })
+            onUnselectDistrict = { selectedDistrict = null },
+            isClaiming = gameViewModel.isClaiming.collectAsState().value,
+            districtBeingClaimed = gameViewModel.districtBeingClaimed.collectAsState().value,
+            timerValue = gameViewModel.timerValue.collectAsState().value,
+            startClaiming = gameViewModel::startClaimingDistrict,
+            stopClaiming = gameViewModel::stopClaimingDistrict
+        )
 
         MapLayer(districts = districts,
             district2claimState = district2claimState,
@@ -90,37 +99,31 @@ private fun DistrictControls(
     claimDistrict: (District, Team, Int) -> Unit,
     currentTeam: Team,
     selectedDistrict: District?,
-    onUnselectDistrict: () -> Unit
+    onUnselectDistrict: () -> Unit,
+    isClaiming: Boolean,
+    districtBeingClaimed: District?,
+    timerValue: Int,
+    startClaiming: (District) -> Unit,
+    stopClaiming: () -> Unit
 ) {
-    var isClaiming by remember { mutableStateOf(false) }
-    val timerViewModel = viewModel<TimerViewModel>()
-    var districtBeingClaimed by remember { mutableStateOf<District?>(null) }
-
-    if (isClaiming) {
-        val time by timerViewModel.time.collectAsState()
-        ClaimingDistrict(time = time,
-            district = districtBeingClaimed!!,
-            claimedBy = district2claimState(districtBeingClaimed!!).collectAsState().value,
+    if (isClaiming && districtBeingClaimed != null) {
+        ClaimingDistrict(time = timerValue,
+            district = districtBeingClaimed,
+            claimedBy = district2claimState(districtBeingClaimed).collectAsState().value,
             onClaimCompleted = {
-                isClaiming = false
                 claimDistrict(
-                    districtBeingClaimed!!, currentTeam, time - time % 60
+                    districtBeingClaimed, currentTeam, timerValue - timerValue % 60
                 )
-                timerViewModel.stopTimer()
-                districtBeingClaimed = null
+                stopClaiming()
             },
             onClaimAborted = {
-                isClaiming = false
-                timerViewModel.stopTimer()
-                districtBeingClaimed = null
+                stopClaiming()
             })
     } else if (selectedDistrict == null) {
         CurrentDistrict(district = currentDistrict,
             claimedBy = currentDistrict?.let { district2claimState(it).collectAsState().value },
             onClaim = {
-                districtBeingClaimed = currentDistrict
-                isClaiming = true
-                timerViewModel.startTimer()
+                currentDistrict?.let { startClaiming(it) }
             })
     } else {
         SelectedDistrict(

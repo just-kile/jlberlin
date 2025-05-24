@@ -14,6 +14,6 @@ class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
         val c = Coordinate(0.0, 0.0)
-        assertEquals(0, c.latitude)
+        assertEquals(0.0, c.latitude, 0.01)
     }
 }
